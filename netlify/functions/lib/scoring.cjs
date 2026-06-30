@@ -247,37 +247,50 @@ async function countRecentStargazers(repo, totalStars, options = {}) {
       throw new Error(`GitHub stargazers returned ${first.status}`);
     }
     const lastPage = parseLastPage(first.headers.get("link")) || Math.ceil(totalStars / 100);
+    const maxPages = Math.min(lastPage, options.maxStarPages || 30);
+    const firstStargazers = await first.json();
+    if (!Array.isArray(firstStargazers) || firstStargazers.length === 0) {
+      return 0;
+    }
+
+    let lastStargazers = firstStargazers;
+    if (lastPage > 1) {
+      const lastUrl = `https://api.github.com/repos/${repo.owner}/${repo.repo}/stargazers?per_page=100&page=${lastPage}`;
+      const response = await fetchWithTimeout(lastUrl, options.timeoutMs || 9000, { headers });
+      if (!response.ok) {
+        throw new Error(`GitHub stargazers returned ${response.status}`);
+      }
+      lastStargazers = await response.json();
+      if (!Array.isArray(lastStargazers) || lastStargazers.length === 0) {
+        return null;
+      }
+    }
+
+    const firstLatest = latestStarDate(firstStargazers);
+    const lastLatest = latestStarDate(lastStargazers);
+    if (!firstLatest && !lastLatest) {
+      return null;
+    }
+
+    const newestFirst = firstLatest && (!lastLatest || firstLatest >= lastLatest);
+    const cachedPages = new Map([
+      [1, firstStargazers],
+      [lastPage, lastStargazers]
+    ]);
     let recentStars = 0;
     let sawStarTimestamp = false;
-    const maxPages = Math.min(lastPage, options.maxStarPages || 30);
 
     for (let offset = 0; offset < maxPages; offset += 1) {
-      const page = lastPage - offset;
-      const url = `https://api.github.com/repos/${repo.owner}/${repo.repo}/stargazers?per_page=100&page=${page}`;
-      const response = await fetchWithTimeout(url, options.timeoutMs || 9000, { headers });
-      if (!response.ok) {
-        break;
-      }
-      const stargazers = await response.json();
-      if (!Array.isArray(stargazers) || stargazers.length === 0) {
-        break;
-      }
+      const page = newestFirst ? 1 + offset : lastPage - offset;
+      if (page < 1 || page > lastPage) break;
 
-      let pageHasOlderStar = false;
-      for (const item of stargazers) {
-        if (!item.starred_at) {
-          continue;
-        }
-        sawStarTimestamp = true;
-        const starredAt = new Date(item.starred_at || 0);
-        if (starredAt >= cutoff) {
-          recentStars += 1;
-        } else {
-          pageHasOlderStar = true;
-        }
-      }
+      const stargazers = cachedPages.get(page) || await fetchStargazerPage(repo, page, headers, options);
+      const pageScore = countRecentStarsInPage(stargazers, cutoff);
+      if (!pageScore.sawStarTimestamp) return null;
 
-      if (pageHasOlderStar) {
+      sawStarTimestamp = true;
+      recentStars += pageScore.recentStars;
+      if (pageScore.hasOlderStar) {
         break;
       }
     }
@@ -286,6 +299,50 @@ async function countRecentStargazers(repo, totalStars, options = {}) {
   } catch (_error) {
     return null;
   }
+}
+
+async function fetchStargazerPage(repo, page, headers, options = {}) {
+  const url = `https://api.github.com/repos/${repo.owner}/${repo.repo}/stargazers?per_page=100&page=${page}`;
+  const response = await fetchWithTimeout(url, options.timeoutMs || 9000, { headers });
+  if (!response.ok) {
+    throw new Error(`GitHub stargazers returned ${response.status}`);
+  }
+  const stargazers = await response.json();
+  if (!Array.isArray(stargazers)) {
+    throw new Error("GitHub stargazers returned an unexpected response");
+  }
+  return stargazers;
+}
+
+function latestStarDate(stargazers) {
+  let latest = null;
+  for (const item of stargazers) {
+    if (!item.starred_at) continue;
+    const date = new Date(item.starred_at);
+    if (!latest || date > latest) {
+      latest = date;
+    }
+  }
+  return latest;
+}
+
+function countRecentStarsInPage(stargazers, cutoff) {
+  let recentStars = 0;
+  let hasOlderStar = false;
+  let sawStarTimestamp = false;
+
+  for (const item of stargazers) {
+    if (!item.starred_at) continue;
+    sawStarTimestamp = true;
+    const starredAt = new Date(item.starred_at);
+    if (starredAt >= cutoff) {
+      recentStars += 1;
+    } else {
+      hasOlderStar = true;
+    }
+  }
+
+  return { recentStars, hasOlderStar, sawStarTimestamp };
 }
 
 function monthlyVisitsToScore(value) {

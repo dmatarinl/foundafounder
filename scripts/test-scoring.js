@@ -95,6 +95,7 @@ async function testRecentStargazersUseConsistentPagination() {
 
     if (!page) {
       return response({
+        body: [{ starred_at: oldDate }],
         link: '<https://api.github.com/repos/example/project/stargazers?per_page=100&page=3>; rel="last"'
       });
     }

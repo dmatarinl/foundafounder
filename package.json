@@ -1,0 +1,19 @@
+{
+  "name": "foundafounder",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Startup Signal Tracker MVP for ranking startups by public momentum signals.",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "node scripts/build.js",
+    "score": "node scripts/score.js data/startups.json",
+    "test": "node scripts/test-scoring.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@netlify/database": "^1.1.0"
+  }
+}

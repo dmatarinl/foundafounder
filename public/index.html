@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Startup Signal Tracker</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Found a Founder</p>
+        <h1>Startup Signal Tracker</h1>
+      </div>
+      <div class="status" id="status">Ready</div>
+    </header>
+
+    <main class="workspace">
+      <section class="band controls-band">
+        <div class="control-group">
+          <button id="add-row" type="button">Add startup</button>
+          <button id="load-sample" type="button" class="secondary">Reload saved</button>
+          <button id="save-startups" type="button" class="secondary">Save list</button>
+        </div>
+        <div class="control-group">
+          <label class="toggle">
+            <input id="enrich-public-data" type="checkbox" checked>
+            <span>Fetch GitHub and HN</span>
+          </label>
+          <button id="calculate" type="button" class="primary">Calculate scores</button>
+          <button id="export-csv" type="button" class="secondary">Export CSV</button>
+        </div>
+      </section>
+
+      <section class="band discovery-band">
+        <div class="section-heading">
+          <h2>Discover Candidates</h2>
+          <p id="discovery-count"></p>
+        </div>
+        <div class="discovery-controls">
+          <input id="discovery-query" placeholder="AI agents, devtools, climate tech, fintech APIs">
+          <select id="discovery-days" aria-label="Discovery lookback window">
+            <option value="90">Last 90 days</option>
+            <option value="180" selected>Last 180 days</option>
+            <option value="365">Last year</option>
+          </select>
+          <input id="discovery-limit" type="number" min="5" max="50" step="5" value="20" aria-label="Candidate limit">
+          <button id="discover" type="button" class="primary">Discover</button>
+          <button id="add-discovered" type="button" class="secondary">Add selected</button>
+        </div>
+        <div class="table-wrap discovery-wrap">
+          <table class="discovery-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Candidate</th>
+                <th>Domain</th>
+                <th>GitHub</th>
+                <th>Discovery</th>
+                <th>Evidence</th>
+              </tr>
+            </thead>
+            <tbody id="discovery-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="band">
+        <div class="section-heading">
+          <h2>Startup Inputs</h2>
+          <p id="persistence-mode"></p>
+        </div>
+        <div class="table-wrap input-wrap">
+          <table class="input-table">
+            <thead>
+              <tr>
+                <th>Startup</th>
+                <th>Domain</th>
+                <th>GitHub repo</th>
+                <th>Search terms</th>
+                <th>Visits</th>
+                <th>Growth</th>
+                <th>Quality</th>
+                <th>News</th>
+                <th>Community</th>
+                <th>Trends</th>
+                <th>Credibility</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="startup-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="band results-layout">
+        <div>
+          <div class="section-heading">
+            <h2>Ranked Results</h2>
+            <p id="result-count"></p>
+          </div>
+          <div class="table-wrap">
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Startup</th>
+                  <th>Website domain</th>
+                  <th>GitHub repo</th>
+                  <th>GitHub</th>
+                  <th>Traffic</th>
+                  <th>Mentions</th>
+                  <th>Final</th>
+                  <th>Confidence</th>
+                  <th>Notes/reason</th>
+                </tr>
+              </thead>
+              <tbody id="results-rows"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <aside class="breakdown" id="breakdown">
+          <h2>Breakdown</h2>
+          <p class="muted">Select a ranked startup.</p>
+        </aside>
+      </section>
+
+      <section class="band caveats">
+        <p>This score does not predict success; it ranks public momentum signals. GitHub signals are strongest for open-source or developer-focused startups.</p>
+      </section>
+    </main>
+
+    <template id="startup-row-template">
+      <tr>
+        <td><input data-field="name" placeholder="Name"></td>
+        <td><input data-field="website_domain" placeholder="example.com"></td>
+        <td><input data-field="github_repo_url" placeholder="https://github.com/org/repo"></td>
+        <td><input data-field="search_terms" placeholder="Name, domain"></td>
+        <td>
+          <select data-field="monthly_visits_band">
+            <option value="no visible estimate">None</option>
+            <option value="under 10k">Under 10k</option>
+            <option value="10k-50k">10k-50k</option>
+            <option value="50k-200k">50k-200k</option>
+            <option value="200k-1M">200k-1M</option>
+            <option value="1M+">1M+</option>
+          </select>
+        </td>
+        <td><input data-field="traffic_growth_score" type="number" min="0" max="100" step="1"></td>
+        <td><input data-field="traffic_quality_score" type="number" min="0" max="100" step="1"></td>
+        <td><input data-field="news_mentions_score" type="number" min="0" max="100" step="1"></td>
+        <td><input data-field="reddit_mentions_score" type="number" min="0" max="100" step="1"></td>
+        <td><input data-field="google_trends_score" type="number" min="0" max="100" step="1"></td>
+        <td><input data-field="credibility_score" type="number" min="0" max="100" step="1"></td>
+        <td><button type="button" class="icon-button remove-row" aria-label="Remove startup">x</button></td>
+      </tr>
+    </template>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

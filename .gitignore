@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+.netlify
+dist
+build
+node_modules
+ranked_startups.csv
+ranked_startups.json
+.DS_Store

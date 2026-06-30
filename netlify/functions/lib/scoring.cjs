@@ -241,7 +241,7 @@ async function countRecentStargazers(repo, totalStars, options = {}) {
   }
 
   try {
-    const firstUrl = `https://api.github.com/repos/${repo.owner}/${repo.repo}/stargazers?per_page=1`;
+    const firstUrl = `https://api.github.com/repos/${repo.owner}/${repo.repo}/stargazers?per_page=100`;
     const first = await fetchWithTimeout(firstUrl, options.timeoutMs || 9000, { headers });
     if (!first.ok) {
       throw new Error(`GitHub stargazers returned ${first.status}`);
@@ -454,5 +454,6 @@ module.exports = {
   starGrowthToScore,
   repoActivityToScore,
   hnHitsToCommunityScore,
+  countRecentStargazers,
   parseGithubRepoUrl
 };

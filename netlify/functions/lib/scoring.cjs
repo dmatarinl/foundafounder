@@ -455,19 +455,29 @@ function reasonFor({ hasGithub, githubScore, trafficScore, mentionsScore, confid
     return `No meaningful public GitHub signal, so the score leans on traffic, mentions, and credibility. Strongest signal is ${strongest[0].toLowerCase()}; confidence is ${confidence}.`;
   }
 
-  const githubNote = github.recent_stars == null
-    ? github.total_stars
-      ? `GitHub has about ${formatCount(github.total_stars)} total stars, but recent growth could not be fully fetched`
-      : "GitHub growth could not be fully fetched"
-    : github.total_stars
-      ? `GitHub has about ${formatCount(github.total_stars)} total stars and added about ${github.recent_stars} in the recent window`
-      : `GitHub added about ${github.recent_stars} stars in the recent window`;
+  const githubNote = githubReasonNote(github);
 
   const dragNote = weakest[0] === "GitHub"
     ? "GitHub score trails because recent star growth carries the most weight"
     : `${weakest[0].toLowerCase()} is the main drag`;
 
   return `${githubNote}. Strongest signal is ${strongest[0].toLowerCase()}, while ${dragNote}; confidence is ${confidence}.`;
+}
+
+function githubReasonNote(github) {
+  if (github.total_stars && github.recent_stars === 0 && github.total_stars >= 50000) {
+    return `GitHub has about ${formatCount(github.total_stars)} total stars. Recent star growth could not be confidently measured`;
+  }
+
+  if (github.recent_stars == null) {
+    return github.total_stars
+      ? `GitHub has about ${formatCount(github.total_stars)} total stars. Recent star growth could not be confidently measured`
+      : "GitHub growth could not be confidently measured";
+  }
+
+  return github.total_stars
+    ? `GitHub has about ${formatCount(github.total_stars)} total stars and added about ${github.recent_stars} in the recent window`
+    : `GitHub added about ${github.recent_stars} stars in the recent window`;
 }
 
 function formatCount(value) {

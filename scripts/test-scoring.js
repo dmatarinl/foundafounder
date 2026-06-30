@@ -102,8 +102,9 @@ async function main() {
     }
   });
 
-  assert.match(matureRepo.reason, /GitHub has about 141k total stars and added about 0/);
-  assert.match(matureRepo.reason, /recent star growth carries the most weight/);
+  assert.match(matureRepo.reason, /GitHub has about 141k total stars/);
+  assert.match(matureRepo.reason, /Recent star growth could not be confidently measured/);
+  assert.doesNotMatch(matureRepo.reason, /added about 0/);
 
   await testRecentStargazersUseConsistentPagination();
   await testRecentStargazersWithoutTimestampsAreUnknown();

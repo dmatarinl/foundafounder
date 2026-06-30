@@ -199,13 +199,14 @@ function renderDiscoveryRows() {
 
   discovered.forEach((candidate, index) => {
     const firstEvidence = candidate.discovery?.evidence?.[0];
+    const discoveryScore = candidate.discovery_score || candidate.discovery?.score || 0;
     const row = document.createElement("tr");
     row.innerHTML = `
       <td><input type="checkbox" value="${index}" aria-label="Select ${escapeAttribute(candidate.name)}"></td>
-      <td>${escapeHtml(candidate.name)}</td>
-      <td>${escapeHtml(candidate.website_domain || "")}</td>
-      <td>${candidate.github_repo_url ? `<a href="${escapeAttribute(candidate.github_repo_url)}" target="_blank" rel="noreferrer">Repo</a>` : ""}</td>
-      <td class="score">${escapeHtml(candidate.discovery_score || candidate.discovery?.score || 0)}</td>
+      <td><strong class="entity-name">${escapeHtml(candidate.name)}</strong></td>
+      <td>${candidate.website_domain ? `<span class="domain-chip">${escapeHtml(candidate.website_domain)}</span>` : emptyMark()}</td>
+      <td>${candidate.github_repo_url ? externalLink(candidate.github_repo_url, "Repo") : emptyMark()}</td>
+      <td>${scoreMeter(discoveryScore, "discovery")}</td>
       <td>${firstEvidence?.url ? `<a href="${escapeAttribute(firstEvidence.url)}" target="_blank" rel="noreferrer">${escapeHtml(firstEvidence.title || firstEvidence.url)}</a>` : escapeHtml(firstEvidence?.title || "")}</td>
     `;
     discoveryRows.appendChild(row);
@@ -224,14 +225,14 @@ function renderResults() {
     }
 
     row.innerHTML = `
-      <td>${startup.rank}</td>
-      <td>${escapeHtml(startup.name)}</td>
-      <td>${escapeHtml(startup.website_domain)}</td>
-      <td>${startup.github_repo_url ? `<a href="${escapeAttribute(startup.github_repo_url)}" target="_blank" rel="noreferrer">Repo</a>` : ""}</td>
-      <td class="score">${startup.github_score}</td>
-      <td class="score">${startup.traffic_score}</td>
-      <td class="score">${startup.mentions_score}</td>
-      <td class="score final">${startup.startup_score}</td>
+      <td><span class="rank-chip">${startup.rank}</span></td>
+      <td><strong class="entity-name">${escapeHtml(startup.name)}</strong></td>
+      <td>${startup.website_domain ? `<span class="domain-chip">${escapeHtml(startup.website_domain)}</span>` : emptyMark()}</td>
+      <td>${startup.github_repo_url ? externalLink(startup.github_repo_url, "Repo") : emptyMark()}</td>
+      <td>${scoreMeter(startup.github_score)}</td>
+      <td>${scoreMeter(startup.traffic_score)}</td>
+      <td>${scoreMeter(startup.mentions_score)}</td>
+      <td>${scoreMeter(startup.startup_score, "final")}</td>
       <td><span class="badge ${escapeAttribute(startup.confidence)}">${escapeHtml(startup.confidence)}</span></td>
       <td>${escapeHtml(startup.reason)}</td>
     `;
@@ -249,11 +250,22 @@ function renderBreakdown(startup) {
   const traffic = startup.breakdown.traffic;
   const mentions = startup.breakdown.mentions;
   breakdown.innerHTML = `
-    <h2>${escapeHtml(startup.name)}</h2>
+    <div class="breakdown-head">
+      <div>
+        <p class="eyebrow">Selected startup</p>
+        <h2>${escapeHtml(startup.name)}</h2>
+      </div>
+      <span class="badge ${escapeAttribute(startup.confidence)}">${escapeHtml(startup.confidence)}</span>
+    </div>
+    <div class="score-hero">
+      <span>Final score</span>
+      <strong>${escapeHtml(startup.startup_score)}</strong>
+      ${scoreBar(startup.startup_score)}
+    </div>
     <div class="metric-grid">
-      <div class="metric"><span>GitHub</span><strong>${startup.github_score}</strong></div>
-      <div class="metric"><span>Traffic</span><strong>${startup.traffic_score}</strong></div>
-      <div class="metric"><span>Mentions</span><strong>${startup.mentions_score}</strong></div>
+      <div class="metric"><span>GitHub</span><strong>${startup.github_score}</strong>${scoreBar(startup.github_score)}</div>
+      <div class="metric"><span>Traffic</span><strong>${startup.traffic_score}</strong>${scoreBar(startup.traffic_score)}</div>
+      <div class="metric"><span>Mentions</span><strong>${startup.mentions_score}</strong>${scoreBar(startup.mentions_score)}</div>
     </div>
     <dl class="breakdown-list">
       ${breakdownRow("Recent stars score", github.star_growth_score)}
@@ -377,7 +389,38 @@ function setStatus(message, mode = "") {
 }
 
 function breakdownRow(label, value) {
-  return `<div class="breakdown-row"><dt>${escapeHtml(label)}</dt><dd><strong>${escapeHtml(value)}</strong></dd></div>`;
+  const maybeScore = Number(value);
+  const bar = Number.isFinite(maybeScore) ? scoreBar(maybeScore) : "";
+  return `<div class="breakdown-row"><dt>${escapeHtml(label)}</dt><dd><strong>${escapeHtml(value)}</strong>${bar}</dd></div>`;
+}
+
+function scoreMeter(value, variant = "") {
+  const score = normaliseScore(value);
+  return `
+    <div class="score-meter ${escapeAttribute(variant)}">
+      <span class="score-value">${score}</span>
+      ${scoreBar(score)}
+    </div>
+  `;
+}
+
+function scoreBar(value) {
+  const score = normaliseScore(value);
+  return `<span class="score-bar" style="--score: ${score}%;"><span></span></span>`;
+}
+
+function normaliseScore(value) {
+  const score = Number(value);
+  if (!Number.isFinite(score)) return 0;
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+function externalLink(url, label) {
+  return `<a class="link-chip" href="${escapeAttribute(url)}" target="_blank" rel="noreferrer">${escapeHtml(label)}</a>`;
+}
+
+function emptyMark() {
+  return `<span class="empty-mark">-</span>`;
 }
 
 function csvCell(value) {

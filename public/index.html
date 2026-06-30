@@ -8,7 +8,7 @@
   </head>
   <body>
     <header class="topbar">
-      <div>
+      <div class="brand-lockup">
         <p class="eyebrow">Found a Founder</p>
         <h1>Startup Signal Tracker</h1>
       </div>
@@ -18,14 +18,14 @@
     <main class="workspace">
       <section class="band controls-band">
         <div class="control-group">
-          <button id="add-row" type="button">Add startup</button>
+          <button id="add-row" type="button">+ Add startup</button>
           <button id="load-sample" type="button" class="secondary">Reload saved</button>
           <button id="save-startups" type="button" class="secondary">Save list</button>
         </div>
         <div class="control-group">
           <label class="toggle">
             <input id="enrich-public-data" type="checkbox" checked>
-            <span>Fetch GitHub and HN</span>
+            <span>Public data</span>
           </label>
           <button id="calculate" type="button" class="primary">Calculate scores</button>
           <button id="export-csv" type="button" class="secondary">Export CSV</button>
@@ -127,7 +127,7 @@
       </section>
 
       <section class="band caveats">
-        <p>This score does not predict success; it ranks public momentum signals. GitHub signals are strongest for open-source or developer-focused startups.</p>
+        <p>Scores rank public momentum signals and are strongest for open-source or developer-focused startups.</p>
       </section>
     </main>
 

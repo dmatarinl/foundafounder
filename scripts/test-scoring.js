@@ -73,6 +73,7 @@ async function main() {
   assert.equal(withoutGithub.confidence, "low");
 
   await testRecentStargazersUseConsistentPagination();
+  await testRecentStargazersWithoutTimestampsAreUnknown();
 
   console.log("Scoring tests passed");
 }
@@ -83,13 +84,14 @@ async function testRecentStargazersUseConsistentPagination() {
   const recentDate = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString();
   const oldDate = new Date(Date.now() - 300 * 24 * 60 * 60 * 1000).toISOString();
 
-  global.fetch = async (url) => {
+  global.fetch = async (url, options = {}) => {
     requestedUrls.push(String(url));
     const parsed = new URL(url);
     const page = parsed.searchParams.get("page");
     const perPage = parsed.searchParams.get("per_page");
 
     assert.equal(perPage, "100");
+    assert.equal(options.headers.Accept, "application/vnd.github.v3.star+json");
 
     if (!page) {
       return response({
@@ -128,6 +130,31 @@ async function testRecentStargazersUseConsistentPagination() {
       "3",
       "2"
     ]);
+  } finally {
+    global.fetch = originalFetch;
+  }
+}
+
+async function testRecentStargazersWithoutTimestampsAreUnknown() {
+  const originalFetch = global.fetch;
+
+  global.fetch = async (_url, options = {}) => {
+    assert.equal(options.headers.Accept, "application/vnd.github.v3.star+json");
+    return response({
+      body: [
+        { login: "example-user" }
+      ]
+    });
+  };
+
+  try {
+    const recentStars = await countRecentStargazers(
+      { owner: "example", repo: "project" },
+      1,
+      { cutoffDays: 150, maxStarPages: 1 }
+    );
+
+    assert.equal(recentStars, null);
   } finally {
     global.fetch = originalFetch;
   }

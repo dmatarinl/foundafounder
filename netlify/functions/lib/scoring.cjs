@@ -233,7 +233,7 @@ async function countRecentStargazers(repo, totalStars, options = {}) {
   const cutoff = new Date(Date.now() - (options.cutoffDays || DEFAULT_CUTOFF_DAYS) * DAY_MS);
   const token = options.githubToken || process.env.GITHUB_TOKEN;
   const headers = {
-    Accept: "application/vnd.github.star+json",
+    Accept: "application/vnd.github.v3.star+json",
     "User-Agent": "foundafounder-startup-signal-tracker"
   };
   if (token) {
@@ -248,6 +248,7 @@ async function countRecentStargazers(repo, totalStars, options = {}) {
     }
     const lastPage = parseLastPage(first.headers.get("link")) || Math.ceil(totalStars / 100);
     let recentStars = 0;
+    let sawStarTimestamp = false;
     const maxPages = Math.min(lastPage, options.maxStarPages || 30);
 
     for (let offset = 0; offset < maxPages; offset += 1) {
@@ -264,6 +265,10 @@ async function countRecentStargazers(repo, totalStars, options = {}) {
 
       let pageHasOlderStar = false;
       for (const item of stargazers) {
+        if (!item.starred_at) {
+          continue;
+        }
+        sawStarTimestamp = true;
         const starredAt = new Date(item.starred_at || 0);
         if (starredAt >= cutoff) {
           recentStars += 1;
@@ -277,7 +282,7 @@ async function countRecentStargazers(repo, totalStars, options = {}) {
       }
     }
 
-    return recentStars;
+    return sawStarTimestamp ? recentStars : null;
   } catch (_error) {
     return null;
   }

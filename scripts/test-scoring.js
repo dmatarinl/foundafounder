@@ -52,6 +52,7 @@ async function main() {
   assert.equal(withGithub.mentions_score, 42);
   assert.equal(withGithub.startup_score, 58);
   assert.equal(withGithub.confidence, "high");
+  assert.match(withGithub.reason, /GitHub has about 2\.5k total stars and added about 300/);
 
   const withoutGithub = scoreStartup({
     name: "ManualCo",
@@ -71,6 +72,38 @@ async function main() {
   assert.equal(withoutGithub.github_score, 0);
   assert.equal(withoutGithub.startup_score, 40);
   assert.equal(withoutGithub.confidence, "low");
+
+  const matureRepo = scoreStartup({
+    name: "MatureRepo",
+    website_domain: "mature.example",
+    github_repo_url: "https://github.com/example/mature",
+    search_terms: ["MatureRepo"],
+    manual: {
+      monthly_visits_band: "1M+",
+      traffic_growth_score: 75,
+      traffic_quality_score: 75,
+      news_mentions_score: 80,
+      reddit_mentions_score: 80,
+      google_trends_score: 75,
+      credibility_score: 80
+    },
+    github: {
+      fetched: true,
+      total_stars: 140587,
+      recent_stars: 0,
+      forks: 500,
+      contributors: 25,
+      releases: 10,
+      archived: false,
+      pushed_recently: true
+    },
+    mentions: {
+      hn_hits: 0
+    }
+  });
+
+  assert.match(matureRepo.reason, /GitHub has about 141k total stars and added about 0/);
+  assert.match(matureRepo.reason, /recent star growth carries the most weight/);
 
   await testRecentStargazersUseConsistentPagination();
   await testRecentStargazersWithoutTimestampsAreUnknown();

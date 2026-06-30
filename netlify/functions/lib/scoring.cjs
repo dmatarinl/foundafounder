@@ -456,10 +456,33 @@ function reasonFor({ hasGithub, githubScore, trafficScore, mentionsScore, confid
   }
 
   const githubNote = github.recent_stars == null
-    ? "GitHub growth could not be fully fetched"
-    : `GitHub added about ${github.recent_stars} stars in the recent window`;
+    ? github.total_stars
+      ? `GitHub has about ${formatCount(github.total_stars)} total stars, but recent growth could not be fully fetched`
+      : "GitHub growth could not be fully fetched"
+    : github.total_stars
+      ? `GitHub has about ${formatCount(github.total_stars)} total stars and added about ${github.recent_stars} in the recent window`
+      : `GitHub added about ${github.recent_stars} stars in the recent window`;
 
-  return `${githubNote}. Strongest signal is ${strongest[0].toLowerCase()}, while ${weakest[0].toLowerCase()} is the main drag; confidence is ${confidence}.`;
+  const dragNote = weakest[0] === "GitHub"
+    ? "GitHub score trails because recent star growth carries the most weight"
+    : `${weakest[0].toLowerCase()} is the main drag`;
+
+  return `${githubNote}. Strongest signal is ${strongest[0].toLowerCase()}, while ${dragNote}; confidence is ${confidence}.`;
+}
+
+function formatCount(value) {
+  const count = Number(value || 0);
+  if (count >= 1000000) {
+    return `${trimFixed(count / 1000000, count >= 10000000 ? 0 : 1)}M`;
+  }
+  if (count >= 1000) {
+    return `${trimFixed(count / 1000, count >= 10000 ? 0 : 1)}k`;
+  }
+  return String(Math.round(count));
+}
+
+function trimFixed(value, digits) {
+  return value.toFixed(digits).replace(/\.0$/, "");
 }
 
 function parseGithubRepoUrl(value) {

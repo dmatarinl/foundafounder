@@ -63,11 +63,19 @@ async function saveStartups(startups) {
     );
     return;
   }
+
+  if (!canUseLocalFile()) {
+    throw new Error("Hosted persistence is unavailable because NETLIFY_DB_URL is not available to this Function runtime.");
+  }
+
   fs.writeFileSync(localPath, `${JSON.stringify(startups, null, 2)}\n`);
 }
 
 async function persistenceMode() {
-  return (await getNetlifyDatabase()) ? "netlify-database" : "local-file";
+  if (await getNetlifyDatabase()) {
+    return "netlify-database";
+  }
+  return canUseLocalFile() ? "local-file" : "sample-fallback";
 }
 
 async function getNetlifyDatabase() {
@@ -86,6 +94,14 @@ async function ensureSchema(db) {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
+}
+
+function canUseLocalFile() {
+  try {
+    return fs.existsSync(localPath) && fs.accessSync(path.dirname(localPath), fs.constants.W_OK) === undefined;
+  } catch (_error) {
+    return false;
+  }
 }
 
 function response(statusCode, body) {

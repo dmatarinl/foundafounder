@@ -303,6 +303,7 @@ th {
   color: #3c4647;
   font-size: 11px;
   font-weight: 850;
+  white-space: nowrap;
   text-transform: uppercase;
 }
 
@@ -320,6 +321,9 @@ tbody tr:hover td {
 
 tbody tr.selected td {
   background: #e7f5ed;
+}
+
+tbody tr.selected td:first-child {
   box-shadow: inset 3px 0 0 var(--green);
 }
 
@@ -366,22 +370,38 @@ tbody tr.selected td {
 }
 
 .results-table th:nth-child(1) {
-  width: 62px;
+  width: 70px;
+}
+
+.results-table {
+  min-width: 1320px;
+}
+
+.results-table th:nth-child(2) {
+  width: 170px;
+}
+
+.results-table th:nth-child(3) {
+  width: 160px;
+}
+
+.results-table th:nth-child(4) {
+  width: 118px;
 }
 
 .results-table th:nth-child(5),
 .results-table th:nth-child(6),
 .results-table th:nth-child(7),
 .results-table th:nth-child(8) {
-  width: 108px;
+  width: 120px;
 }
 
 .results-table th:nth-child(9) {
-  width: 108px;
+  width: 130px;
 }
 
 .results-table th:nth-child(10) {
-  width: 340px;
+  width: 360px;
 }
 
 input,
@@ -534,8 +554,11 @@ input::placeholder {
 .entity-name {
   display: block;
   min-width: 0;
+  overflow: hidden;
   color: #1c2829;
   font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .rank-chip,
@@ -586,6 +609,7 @@ input::placeholder {
   grid-template-columns: 30px minmax(42px, 1fr);
   align-items: center;
   gap: 7px;
+  min-width: 86px;
 }
 
 .score-meter.final .score-value {

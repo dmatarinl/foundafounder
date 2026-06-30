@@ -1,12 +1,15 @@
-const fs = require("node:fs");
-const path = require("node:path");
-const { getDatabase } = require("@netlify/database");
-const sampleStartups = require("./lib/sample-startups.cjs");
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { getDatabase } from "@netlify/database";
+import sampleStartups from "./lib/sample-startups.cjs";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const localPath = path.resolve(__dirname, "../../data/startups.json");
 const STARTUPS_KEY = "startups";
 
-exports.handler = async (event) => {
+export async function handler(event) {
   try {
     if (event.httpMethod === "OPTIONS") {
       return response(204, "");
@@ -32,7 +35,7 @@ exports.handler = async (event) => {
       error: error.message || "Unexpected startup storage error"
     });
   }
-};
+}
 
 async function loadStartups() {
   const db = await getNetlifyDatabase();
@@ -44,6 +47,7 @@ async function loadStartups() {
       return saved;
     }
   }
+
   if (fs.existsSync(localPath)) {
     return JSON.parse(fs.readFileSync(localPath, "utf8"));
   }

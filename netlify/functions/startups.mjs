@@ -1,12 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { getDatabase } from "@netlify/database";
 import sampleStartups from "./lib/sample-startups.cjs";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const localPath = path.resolve(__dirname, "../../data/startups.json");
+const localPath = path.resolve(process.cwd(), "data/startups.json");
 const STARTUPS_KEY = "startups";
 
 export async function handler(event) {
